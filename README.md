@@ -12,7 +12,7 @@ MootPrint는 사용자의 이동 경로와 상태(배터리, 충전 여부, 네�
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.0)"]
+    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.1)"]
         Sensors["GPS / Network / Activity Recognition"] --> Tracker["HybridLocationManager\n(15분 정시 무조건 + 5분 조건부)"]
         Tracker --> RoomDB["Room Database v3\n(오프라인 버퍼, timezoneOffset 포함)"]
         RoomDB --> SyncEngine["LocationRepository\n(단건 및 Batch 동기화)"]
@@ -51,7 +51,7 @@ flowchart TD
 
 사용자의 일상 이동 경로를 배터리 소모를 최소화하면서 누락 없이 정밀 수집하는 모바일 클라이언트입니다.
 
-- **버전**: `2.3.0` (`versionCode 11`)
+- **버전**: `2.3.1`
 - **타깃 SDK**: Android SDK 36 (Min SDK 26)
 
 ### 1.1 핵심 기능 및 추적 메커니즘
@@ -140,6 +140,12 @@ flowchart TD
 ---
 
 ## 📋 4. 주요 변경 이력 (Version History)
+
+### v2.3.1 (2026-11-25)
+
+- **Android 앱 (`MootPrint`)**:
+  - 구버전(api/v2 도입 전) 사용자 업데이트 직후 앱 실행(`MainViewModel`) 및 통계 조회(`RegionStatsRepository`) 시 Google `silentSignIn()` 기반 v2 JWT 세션 즉시 자동 발급 및 단일 비행(`recoveryMutex`) 중복 방지 (`AuthSessionManager`, `AuthSessionWorker`)
+  - 만료·폐기된 Refresh Token(`SessionRevoked`) 발생 시 1회 자동 재발급 시도 및 실패 시 재로그인 안내 개선
 
 ### v2.3.0 / v1.2.2-SNAPSHOT / v1.4.3 (2026-11-24 ~ 2026-11-25)
 
