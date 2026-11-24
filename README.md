@@ -12,7 +12,7 @@ MootPrint는 사용자의 이동 경로와 상태(배터리, 충전 여부, 네�
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.1)"]
+    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.2)"]
         Sensors["GPS / Network / Activity Recognition"] --> Tracker["HybridLocationManager\n(15분 정시 무조건 + 5분 조건부)"]
         Tracker --> RoomDB["Room Database v3\n(오프라인 버퍼, timezoneOffset 포함)"]
         RoomDB --> SyncEngine["LocationRepository\n(단건 및 Batch 동기화)"]
@@ -51,7 +51,7 @@ flowchart TD
 
 사용자의 일상 이동 경로를 배터리 소모를 최소화하면서 누락 없이 정밀 수집하는 모바일 클라이언트입니다.
 
-- **버전**: `2.3.1`
+- **버전**: `2.3.2` (`versionCode 13`)
 - **타깃 SDK**: Android SDK 36 (Min SDK 26)
 
 ### 1.1 핵심 기능 및 추적 메커니즘
@@ -140,6 +140,14 @@ flowchart TD
 ---
 
 ## 📋 4. 주요 변경 이력 (Version History)
+
+### v2.3.2 (2026-11-25)
+
+- **Android 앱 (`MootPrint`)**:
+  - 무음 세션 복구 실패 시 로그아웃 없이 복구할 수 있도록 `MainActivity` 선제 재인증(실행당 1회) 및 `StatsActivity` 원탭 **"Google 계정 재인증"** 버튼 추가 (`AuthSessionManager.completeInteractiveV2Login`)
+  - 인증 실패 원인 코드 분류(`SILENT_SIGNIN_*`, `V2_LOGIN_HTTP_*` 등) 및 `LocationDiagnosticLogger` `[AUTH]` 진단 로그 기록, `AuthRepository` 레거시 폴백 전 `silentSignIn()` 1회 재시도 추가
+  - 사용자 카드 길게 누르기 로그아웃 다이얼로그 추가 및 로그아웃 시 `HybridLocationManager.stopLocationTracking()`(`stopService`) 호출로 위치 추적 체인 즉시 정지
+  - v2 세션 복구 및 재접속 완료 직후 미동기화(`isSynced = false`) 위치 기록을 백그라운드에서 즉시 업로드(`flushUnsyncedLocationsAsync`)
 
 ### v2.3.1 (2026-11-25)
 
