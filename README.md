@@ -12,7 +12,7 @@ MootPrint는 사용자의 이동 경로와 상태(배터리, 충전 여부, 네�
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.2)"]
+    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.3)"]
         Sensors["GPS / Network / Activity Recognition"] --> Tracker["HybridLocationManager\n(15분 정시 무조건 + 5분 조건부)"]
         Tracker --> RoomDB["Room Database v3\n(오프라인 버퍼, timezoneOffset 포함)"]
         RoomDB --> SyncEngine["LocationRepository\n(단건 및 Batch 동기화)"]
@@ -51,7 +51,7 @@ flowchart TD
 
 사용자의 일상 이동 경로를 배터리 소모를 최소화하면서 누락 없이 정밀 수집하는 모바일 클라이언트입니다.
 
-- **버전**: `2.3.2` (`versionCode 13`)
+- **버전**: `2.3.3` (`versionCode 14`)
 - **타깃 SDK**: Android SDK 36 (Min SDK 26)
 
 ### 1.1 핵심 기능 및 추적 메커니즘
@@ -73,7 +73,7 @@ flowchart TD
   - `DuplicatePreventionHelper`: SharedPreferences 기반 메모리 캐싱으로 중복 검사 시 DB 부하 제거.
 - **사용자 인터페이스 (UI)**:
   - `MapActivity`: Naver Map(기본) 및 Google Maps 듀얼 렌더러 지원, 날짜별 궤적 조회, 시간 및 UTC 타임존 라벨 표기.
-  - `StatsActivity`: 국내 행정구역(기초 시·군·구 / 광역 시·도) 방문 통계 지도, 정복률 요약, 지역 선택 시 정렬 순번(`#{num}`) 및 둥근 상태 뱃지(`bg_status_badge.xml`)가 포함된 상세 BottomSheet 제공.
+  - `StatsActivity`: 국내 행정구역(기초 시·군·구 / 광역 시·도) 방문 통계 지도, 정복률 및 최근 업데이트 시각 요약, `NAVER | OpenStreetMap` 상단 범례 배치, `상세 목록` 버튼 기반 PC형 상세 카드·검색·상태 필터(`전체`/`방문`/`경유`/`미방문`)·정렬 순번(`#{num}`) 목록 및 상세 BottomSheet 제공.
   - `MainActivity`: Google Drive 내 `mootprint-<버전>-release.apk`만 비교하여 최신 버전 여부를 확인.
 - **진단 및 안정성 도구**:
   - `LocationDiagnosticLogger`: 별도 권한 없이 `Downloads/MootPrint`에 7일 보존 주기로 판정 및 수집 사유를 기록 (개인정보 보호를 위해 위·경도 좌표는 제외).
@@ -140,6 +140,13 @@ flowchart TD
 ---
 
 ## 📋 4. 주요 변경 이력 (Version History)
+
+### v2.3.3 (2026-11-25)
+
+- **Android 앱 (`MootPrint`)**:
+  - `StatsActivity` 요약 카드에 최근 통계 업데이트 시각(`lastAggregatedAt`, KST `yyyy-MM-dd HH:mm`) 표시 추가
+  - 방문 상태 범례 카드를 좌하단 `NAVER | OpenStreetMap` 지도 UI 상단에 겹치지 않도록 재배치
+  - `상세 목록` 버튼을 눌러 PC 웹 대시보드와 동일하게 선택 지역 상세 정보(순위·코드·관할 시·군·구 진행도·방문 지표), 지역명·코드 검색, 상태 필터(`전체` / `방문` / `경유` / `미방문`), 정렬 순번(`#{num}`) 목록을 조회하고 `지도에서 위치 보기`로 해당 행정구역에 카메라를 포커스하는 기능 추가 (`RegionStatsListAdapter`, `RegionStatsFormatter`)
 
 ### v2.3.2 (2026-11-25)
 
