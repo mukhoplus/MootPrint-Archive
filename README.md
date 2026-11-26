@@ -146,7 +146,9 @@ flowchart TD
 - **Android 앱 (`MootPrint`)**:
   - `StatsActivity` 요약 카드에 최근 통계 업데이트 시각(`lastAggregatedAt`, KST `yyyy-MM-dd HH:mm`) 표시 추가
   - 방문 상태 범례 카드를 좌하단 `NAVER | OpenStreetMap` 지도 UI 상단에 겹치지 않도록 재배치
-  - `상세 목록` 버튼을 눌러 PC 웹 대시보드와 동일하게 선택 지역 상세 정보(순위·코드·관할 시·군·구 진행도·방문 지표), 지역명·코드 검색, 상태 필터(`전체` / `방문` / `경유` / `미방문`), 정렬 순번(`#{num}`) 목록을 조회하고 `지도에서 위치 보기`로 해당 행정구역에 카메라를 포커스하는 기능 추가 (`RegionStatsListAdapter`, `RegionStatsFormatter`)
+  - `상세 목록` 버튼을 눌러 PC 웹 대시보드와 동일하게 상단 고정 선택 지역 상세 정보(순위·코드·관할 시·군·구 진행도·4열 컴팩트 방문 지표), 고정 검색·상태 필터(`전체` / `방문` / `경유` / `미방문`), 하단 단독 스크롤 정렬 순번(`#{num}`) 목록을 조회하고 `위치 보기`로 해당 행정구역에 카메라를 포커스하는 기능 추가 (`RegionStatsListAdapter`, `RegionStatsFormatter`)
+- **관리자 웹 (`MootPrint-Admin`)**:
+  - `/stats` 선택 지역(시·군·구 / 광역 시·도) 상세 카드에서 위치 아이콘과 행정구역 코드 사이에 정렬 순번(`#{num}`) 표시 추가
 
 ### v2.3.2 (2026-11-25)
 
@@ -221,5 +223,5 @@ cd MootPrint && ./gradlew assembleDebug
 cd MootPrint-Server && ./gradlew bootRun
 
 # Web Admin (MootPrint-Admin)
-cd MootPrint-Admin && npm install && npm run build && next build && npm run start
+cd MootPrint-Admin && npm install && npm run build && npm run start
 ```
