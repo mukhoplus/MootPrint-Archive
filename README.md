@@ -12,7 +12,7 @@ MootPrint는 사용자의 이동 경로와 상태(배터리, 충전 여부, 네�
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.3)"]
+    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.4)"]
         Sensors["GPS / Network / Activity Recognition"] --> Tracker["HybridLocationManager\n(15분 정시 무조건 + 5분 조건부)"]
         Tracker --> RoomDB["Room Database v3\n(오프라인 버퍼, timezoneOffset 포함)"]
         RoomDB --> SyncEngine["LocationRepository\n(단건 및 Batch 동기화)"]
@@ -51,7 +51,7 @@ flowchart TD
 
 사용자의 일상 이동 경로를 배터리 소모를 최소화하면서 누락 없이 정밀 수집하는 모바일 클라이언트입니다.
 
-- **버전**: `2.3.3` (`versionCode 14`)
+- **버전**: `2.3.4` (`versionCode 15`)
 - **타깃 SDK**: Android SDK 36 (Min SDK 26)
 
 ### 1.1 핵심 기능 및 추적 메커니즘
@@ -140,6 +140,13 @@ flowchart TD
 ---
 
 ## 📋 4. 주요 변경 이력 (Version History)
+
+### v2.3.4 (2026-11-27)
+
+- **Android 앱 (`MootPrint`)**:
+  - `LocationWorker`가 `STALE_AGE` / `LOW_ACC` / `BEFORE_LAST` 사유로 재측위에 실패해 기존 캐시 폴백으로 넘어가기 직전, 백그라운드 `getCurrentLocation()` 단축 반환을 보완하기 위해 `PRIORITY_BALANCED_POWER_ACCURACY` 기반 능동 위치 업데이트(`requestLocationUpdates`)와 `LocationManager.NETWORK_PROVIDER` 단발 조회를 7초 타임아웃(`age < 10초`, `acc <= 800m` 수용)으로 추가 시도하도록 개선
+  - `getCurrentLocationWithStatus()`에 1초 타임아웃 안전 마진을 적용하고 `refresh=..._FALLBACK[gnss=...,net=...,act=...]` 진단 사유 태그로 단계별 실패 원인을 로그에 기록하도록 보강
+  - `StatsActivity` 통계 지도 초기 렌더링 지연을 줄이기 위해 행정구역 `LatLng` 변환 및 `PolygonOverlay` 객체 생성을 `Dispatchers.IO` 백그라운드로 이동하고, 현재 표시 레벨(시·군·구) 우선 부착 후 보조 레벨(시·도) 백그라운드 순차 준비 및 스타일 선적용으로 메인 스레드 부하를 개선
 
 ### v2.3.3 (2026-11-25)
 
