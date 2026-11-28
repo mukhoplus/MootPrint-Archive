@@ -12,7 +12,7 @@ MootPrint는 사용자의 이동 경로와 상태(배터리, 충전 여부, 네�
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.4)"]
+    subgraph Client ["Android 모바일 클라이언트 (MootPrint v2.3.5)"]
         Sensors["GPS / Network / Activity Recognition"] --> Tracker["HybridLocationManager\n(15분 정시 무조건 + 5분 조건부)"]
         Tracker --> RoomDB["Room Database v3\n(오프라인 버퍼, timezoneOffset 포함)"]
         RoomDB --> SyncEngine["LocationRepository\n(단건 및 Batch 동기화)"]
@@ -51,15 +51,15 @@ flowchart TD
 
 사용자의 일상 이동 경로를 배터리 소모를 최소화하면서 누락 없이 정밀 수집하는 모바일 클라이언트입니다.
 
-- **버전**: `2.3.4` (`versionCode 15`)
+- **버전**: `2.3.5` (`versionCode 16`)
 - **타깃 SDK**: Android SDK 36 (Min SDK 26)
 
 ### 1.1 핵심 기능 및 추적 메커니즘
 
 - **하이브리드 위치 추적 시스템**:
-  - **15분 단위 정시 필수 기록 (00, 15, 30, 45분)**: 알람 슬롯(`scheduled_at`) 기준으로 Doze 지연이 발생해도 정시 기록으로 자동 승격. GPS 수신 실패 시 OS 최근 위치 캐시(`lastLocation` $\rightarrow$ `getLastKnownLocation`)로 폴백하여 기록 정합성 보장.
-  - **5분 단위 조건부 기록 (05, 10, 20, 25분 등)**: `Activity Recognition API`와 OS 패시브 위치를 조합하여 실제 이동 중(지하철 등 포함)일 때만 수집. 이전 기록과 50m 이내인 경우 중복 저장 방지.
-  - 고속 이동 중 미갱신 캐시 또는 정확도 500m 초과 위치 수신 시 30초 내 신규 측정(`maxUpdateAgeMillis = 0`) 1회 재요청.
+  - **15분 단위 정시 필수 기록 (00, 15, 30, 45분)**: 알람 슬롯(`scheduled_at`) 기준으로 Doze 지연이 발생해도 정시 기록으로 자동 승격. 완전 정지 상태(`!isMoving && !hasMoved`)에서는 신뢰 가능한 OS 캐시(`CACHE_STATIC`)를 우선 기록하여 GNSS 기동을 생략하고, 이동 중이거나 GPS 수신 실패 시에는 OS 최근 위치 캐시(`lastLocation` $\rightarrow$ `getLastKnownLocation`) 폴백까지 수행해 기록 정합성 보장.
+  - **5분 단위 조건부 기록 (05, 10, 20, 25분 등)**: `Activity Recognition API`와 OS 패시브 위치를 조합하여 실제 이동 중(지하철 등 포함)일 때만 수집. `Still_ENTER` 누락 고착을 막기 위해 활동별 TTL(`IN_VEHICLE` 20분, `ON_BICYCLE` 15분, `WALKING`/`RUNNING` 10분) 및 신뢰 실측 연속 2회 정지 자동 해제를 적용하며, 도보 중 동일 비종량제 Wi-Fi BSSID 유지 및 오차 보정 유효 거리(`EffectiveDist`)로 실내 드리프트와 중복 저장을 방지.
+  - 실제 이동 중(`moving=true`) 미갱신·저정밀 캐시 수신 시 2차 GNSS(15s) $\rightarrow$ 3차 BALANCED(7s) $\rightarrow$ 4차 능동 FLP+`LocationManager` 병렬 폴백(10초)을 순차 시도하며, 정지 직후(`moving=false, hasMoved=true`) 슬롯에서는 재측위 루프를 생략.
 - **백그라운드 생명주기 및 절전 최적화 대응**:
   - `Exact Alarm` $\rightarrow$ `WorkManager` 백업 체인 전환 지원.
   - `TrackingWatchdogWorker`: 15분 주기로 알람 체인 생존 상태를 감시하고 끊김 발생 시 자동 복구.
@@ -140,6 +140,15 @@ flowchart TD
 ---
 
 ## 📋 4. 주요 변경 이력 (Version History)
+
+### v2.3.5 (2026-11-28)
+
+- **Android 앱 (`MootPrint`)**:
+  - **정지 상태 판별 기준 강화 (`ActivityTransitionReceiver`, `LocationWorker`)**: `Still_ENTER` 누락으로 `moving=true`가 장기 고착되는 현상을 차단하기 위해 활동별 TTL(`IN_VEHICLE` 20분, `ON_BICYCLE` 15분, `WALKING`/`RUNNING` 10분) 자동 해제 및 신뢰 가능한 실측(`!isStaleFallback && acc <= 100m`) 연속 2회 정지 시 자동 정지(`STATIONARY_AUTO_STOP`) 전환 추가. 고속 이동·야외 도보 중 `STALE_AGE_FALLBACK`이라도 50m 초과 유효 이동 시 TTL을 연장하고 터널 스탈 폴백 연속 시에는 정지 카운트를 누적하지 않도록 보호
+  - **알람-워커 `moving` / `hasMoved` 상태 분리 (`LocationAlarmReceiver`, `LocationWorker`)**: `Still_ENTER` 직후(`moving=false, hasMoved=true`) 워커에서 `moving=true`로 덮어쓰여 7초 능동 폴백 공회전 및 `hasMoved` 미해제 루프가 발생하던 문제 수정
+  - **정지 중 `15M_PERIODIC` 캐시 우선 (`LocationWorker`)**: `!isMoving && !hasMoved` 상태에서 동일 비종량제 Wi-Fi 유지 또는 15분 내 동일 망 캐시일 경우 GNSS를 깨우지 않고 `CACHE_STATIC`(`RECORDED_CACHE_STATIC`)으로 즉시 기록 (망 변경·장기 캐시 시 `BALANCED` 1회 보완, 캐시 미존재 시 기존 경로 폴백)
+  - **실제 이동 중 능동 폴백 타임아웃 상향 (`LocationWorker`)**: 실제 `isMoving=true`일 때만 능동 FLP+`LocationManager` 병렬 폴백 타임아웃을 `7초 → 10초`로 상향해 고속 이동·음영 구간 포착력 보완
+  - **실내 소규모 이동 필터링 (`DuplicatePreventionHelper`, `LocationAlarmReceiver`, `LocationWorker`)**: `WALKING` 중 동일 비종량제 Wi-Fi BSSID 유지(`INDOOR_WIFI`) 또는 신선·고정밀 패시브 50m 이내(`INDOOR_PASSIVE`) 시 5분 알람을 스킵하고, `IN_VEHICLE` 및 `acc > 100m` 구간을 제외한 도보 구간에 오차 보정 유효 거리(`EffectiveDist`) 적용 (`LocationDiagnosticLogger` 디버그 태그 확장 포함)
 
 ### v2.3.4 (2026-11-27)
 
